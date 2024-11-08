@@ -180,23 +180,44 @@
     shareButton.addEventListener('click', (ev) => {
       console.log('share button was clicked')
       // TODO redirect to a sharable link by completing the steps below
-
       // 1. get the current state from localStorage
+      let toDoList = localStorage.getItem("items") ?? "[]";
+
+      let currentItemsObj = {
+        items : JSON.parse(toDoList)
+      };
 
       // 2. create a URLSearchParams object from the data you retrieved from localStorage
+      let params = new URLSearchParams(currentItemsObj);
 
       // 3. get the current url from window.location
+      let curUrl = window.location.href.split("?")[0];
 
       // 4. set the current url's search property to '?' concatenated with: the urlsearchparams object's tostring 
+      curUrl.search = "?" + params.toString();
 
       // 5. update the window.location to the result of the preceding step
+      window.location.assign(curUrl + "?" + params.toString());
+
+      console.log('share button was clicked')
     })
 
     function populateLocalStorageFromURLSeach() {
       console.log('populateLocalStorageFromURLSeach')
       // TODO update from URL by completing the steps below:
+      if (localStorage.getItem("items") == null) {
+        localStorage.setItem("items", JSON.stringify([]));
+        console.log("items in localStorage wasn't found, adding items");
+      }
       // 1. when the page loads, look to see if the url has a querystring that has the kind of data you added to it above
+      let queryString = new URLSearchParams(window.location.search);
       // 2. if there is such data in the querystring, replace the state in localStorage with the data in the URL
+      let queryStringData = queryString.get("items");
+      if (queryStringData != null) {
+        let queryStringDataArr = queryString.get("items").split(",");
+        localStorage.setItem("items", JSON.stringify(queryStringDataArr));
+        console.log("value from querystring added to localStorage");
+      }
     }
 
     // initialize the page
@@ -214,22 +235,31 @@
 
       // TODO 1. get the current state from localStorage
       // I wanted mine to be an object with a single key (items) and then a parsed representation of the value from localStorage
+      let toDoList = localStorage.getItem("items") ?? "[]";
+
+      let currentItemsObj = {
+        items : JSON.parse(toDoList)
+      };
 
       // TODO 2. get the stringified version of the state from the previous step
-
+      let itemsString = JSON.stringify(currentItemsObj.items);
       // TODO 3. encode the state as a URI component
-
+      let encoded = encodeURIComponent(itemsString);
       // TODO 4. prepend the encoded string with the data URL dark magic:
-      // 'data:application/json;charset=utf-8,'
+      encoded = 'data:application/json;charset=utf-8,' + encoded;
       // ok, it's not really dark magic, read more here:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs
 
       // TODO 5. create a link which has as its href the result from the preceding step and its download attribute set to
       // "transportodons.json"
+      let newLink = document.createElement("a");
+      newLink.href = encoded;
+      newLink.download = "transportodons.json";
 
       // TODO 6. add the link to the downloads container in the provided html
-
+      document.getElementById("downloads").appendChild(newLink);
       // TODO 7. write the javascript to click the newly added link
+      newLink.click();
     }
 
     // when the import form is submitted...
@@ -240,33 +270,40 @@
       // completing the steps below: 
 
       // get a reference to the file field
-      const importField = document.getElementById('import-file')
+      const importField = document.getElementById('import-file');
 
       // TODO 1. get the list of file objects selected by the user
+      let file = importField.files[0];
 
       // TODO 2. if there aren't any, alert a helpful message
-
+      if (file == null) {
+        alert("No file selected!");
+      }
       // TODO 3. if there was at least 1 file, proceed with only the first file
 
       // TODO 4. construct a new FileReader object
-
+      let reader = new FileReader();
       // TODO 5. add an event listener for the new FileReader's load event that will call the loadedJSON function below
-
+      reader.onload = function(ev) {
+        loadedJSON(ev);
+      };
       // TODO 6. tell the filereader to read the file as text https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsText
+      reader.readAsText(file);
     }
 
     // callback for when the json file is loaded during import
     function loadedJSON(ev) {
       // TODO 7. get the event's target's result
-
+      let result = ev.target.result;
       // TODO 8. decode the result (recall that it was encoded for use as a URL during export above)
-
+      let decoded = decodeURIComponent(result);
+      console.log("decoded " + decoded);
       // TODO 9. the decoded value should be a JSON string, parse it.
-
+      decoded = JSON.parse(decoded);
       // TODO 10. add the items from the parsed object into localstorage
-
+      localStorage.setItem("items", JSON.stringify(decoded));
       // update the list of todos based on the newly populated state in localStorage
-      populateFromLocalStorage()
+      populateFromLocalStorage();
     }
 
 
